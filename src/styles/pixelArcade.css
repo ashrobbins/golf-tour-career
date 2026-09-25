@@ -1,0 +1,258 @@
+/* Shared Pixel Arcade design tokens & primitives — matches the design
+   canvas mockups. Screens compose these instead of re-declaring the same
+   colors/fonts/borders inline. */
+
+:root {
+  --pa-cream: #cfe8c9;
+  --pa-cream-mid: #b9dcb1;
+  --pa-cream-light: #e6dfc6;
+  --pa-ink: #14251a;
+  --pa-parchment: #f4e9c1;
+  --pa-parchment-dim: #cfc9a8;
+  --pa-bright-yellow: #f0e05a;
+  --pa-coral: #e85d4c;
+  --pa-coral-soft: #f9d7c9;
+  --pa-green: #4d9a52;
+  --pa-blue: #7ec8e3;
+  --pa-blue-text: #2d6bb0;
+  --pa-amber-text: #b06a1e;
+  --pa-body-text: #3a3a2c;
+  --pa-muted-text: #5c563f;
+
+  --pa-font-title: "Press Start 2P", monospace;
+  --pa-font-body: "VT323", monospace;
+}
+
+.pa-screen {
+  position: relative; /* so a full-screen overlay (e.g. a confirm dialog) can
+    position itself against the screen instead of the viewport */
+  width: 100%;
+  max-width: 450px;
+  height: 100vh; /* fallback for browsers without dvh support */
+  height: 100dvh; /* on mobile, 100vh is the height with the address bar
+                     hidden — when the bar is showing, a plain 100vh screen
+                     is taller than what's actually visible and the sticky
+                     footer gets pushed past the fold. dvh tracks the real
+                     visible viewport instead. */
+  margin: 0 auto;
+  background: var(--pa-cream);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--pa-font-body);
+  overflow: hidden;
+  border: 4px solid var(--pa-ink);
+  box-sizing: border-box;
+}
+
+.pa-screen * {
+  box-sizing: border-box;
+}
+
+.pa-header {
+  background: var(--pa-ink);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.pa-header-back {
+  all: unset;
+  box-sizing: border-box; /* `all: unset` resets box-sizing to content-box,
+    which combined with an explicit width and padding/border elsewhere would
+    render wider than intended — see .pa-cta for where that actually bit. */
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--pa-parchment);
+  font-family: var(--pa-font-title);
+  font-size: 14px;
+}
+
+.pa-title {
+  font-family: var(--pa-font-title);
+  color: var(--pa-parchment);
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.pa-subtitle {
+  font-family: var(--pa-font-body);
+  color: #8fd694;
+  font-size: 16px;
+  margin-top: 4px;
+}
+
+.pa-content {
+  flex-grow: 1;
+  min-height: 0; /* without this, a flex child won't shrink below its content
+                    height, so overflow-y:auto never kicks in and the sticky
+                    footer gets pushed off the bottom of the screen instead
+                    of staying put while this area scrolls internally. */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 20px; /* breathing room before the sticky footer — every
+    screen's .pa-section only pads its own top, so without this the last
+    section's content (e.g. a table's bottom border) butts straight up
+    against the footer's border with nothing but the footer's own padding
+    in between. */
+}
+
+.pa-section {
+  /* individual properties, not the `padding` shorthand — a shorthand here
+     would set padding-bottom:0 and, on an element that also carries
+     .pa-content (GameplayDecision combines both classes on one div),
+     silently override .pa-content's own padding-bottom since .pa-section
+     is declared later in this file with equal specificity. */
+  padding-top: 18px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+.pa-section-label {
+  font-family: var(--pa-font-title);
+  color: var(--pa-ink);
+  font-size: 12px;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.pa-sticky-footer {
+  flex-shrink: 0;
+  background: var(--pa-cream);
+  border-top: 4px solid var(--pa-ink);
+  padding: 16px 16px 24px 16px;
+}
+
+.pa-cta {
+  all: unset;
+  /* `all: unset` resets box-sizing to its initial value, content-box. With
+     width:100% + padding + border below, content-box means the padding and
+     border get ADDED on top of that 100%, so the button rendered 40px wider
+     than its container — all of it to the right, since the left edge stays
+     anchored by normal block flow. pa-screen's overflow:hidden then clipped
+     that overflow flush with the right border, which looked like the CTA
+     had no right padding at all. border-box makes width:100% include the
+     padding/border instead, so it actually fits. */
+  box-sizing: border-box;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  background: var(--pa-ink);
+  border: 4px solid var(--pa-ink);
+  --pa-shadow-offset: 6px;
+  --pa-shadow-color: var(--pa-green);
+  box-shadow: var(--pa-shadow-offset) var(--pa-shadow-offset) 0 var(--pa-shadow-color);
+  padding: 16px;
+  text-align: center;
+  font-family: var(--pa-font-title);
+  color: var(--pa-parchment);
+  font-size: 13px;
+  transition: transform 80ms ease, box-shadow 80ms ease;
+}
+
+/* Pressed state: the button shifts toward its own drop-shadow AND the
+   shadow's offset shrinks by the same distance, so the visible sliver of
+   "border" peeking out on the right/bottom thins down instead of just
+   sliding along underneath (transform alone moves the shadow with the
+   element, since box-shadow is painted in the element's own box — it
+   never gets thinner on its own). */
+.pa-cta:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: calc(var(--pa-shadow-offset) - 3px) calc(var(--pa-shadow-offset) - 3px) 0 var(--pa-shadow-color);
+}
+
+.pa-cta:disabled {
+  opacity: 0.5;
+  cursor: default;
+  --pa-shadow-color: var(--pa-parchment-dim);
+}
+
+.pa-option-card {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  background: var(--pa-parchment);
+  border: 4px solid var(--pa-ink);
+  --pa-shadow-offset: 6px;
+  --pa-shadow-color: var(--pa-ink);
+  box-shadow: var(--pa-shadow-offset) var(--pa-shadow-offset) 0 var(--pa-shadow-color);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 80ms ease, box-shadow 80ms ease;
+}
+
+.pa-option-card:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: calc(var(--pa-shadow-offset) - 3px) calc(var(--pa-shadow-offset) - 3px) 0 var(--pa-shadow-color);
+}
+
+.pa-option-card.pa-option-risky {
+  background: var(--pa-coral-soft);
+}
+
+.pa-option-card:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.pa-chip {
+  font-family: var(--pa-font-body);
+  padding: 2px 10px;
+  font-size: 16px;
+  border: 2px solid var(--pa-ink);
+}
+
+.pa-chip-safe {
+  background: var(--pa-green);
+  color: var(--pa-parchment);
+}
+
+.pa-chip-risky {
+  background: var(--pa-coral);
+  color: var(--pa-parchment);
+}
+
+.pa-bar {
+  display: flex;
+  gap: 2px;
+}
+
+.pa-bar-segment {
+  flex: 1;
+  height: 14px;
+  border: 2px solid var(--pa-ink);
+  background: var(--pa-cream-light);
+}
+
+.pa-bar-segment.filled {
+  background: var(--pa-green);
+}
+
+.pa-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-bottom: 2px solid var(--pa-cream-light);
+}
+
+.pa-row.pa-row-player {
+  background: var(--pa-parchment);
+  border-top: 3px solid var(--pa-ink);
+  border-bottom: 3px solid var(--pa-ink);
+  padding: 8px 10px;
+}
+
+.pa-panel {
+  background: #ffffff;
+  border: 3px solid var(--pa-ink);
+  padding: 10px 8px;
+}
